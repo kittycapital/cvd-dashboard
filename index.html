@@ -230,9 +230,9 @@
 
   <div class="controls-row">
     <span style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">집계 간격:</span>
-    <button class="timeframe-btn" data-bucket="5">5s</button>
+    <button class="timeframe-btn active" data-bucket="5">5s</button>
     <button class="timeframe-btn" data-bucket="15">15s</button>
-    <button class="timeframe-btn active" data-bucket="30">30s</button>
+    <button class="timeframe-btn" data-bucket="30">30s</button>
     <button class="timeframe-btn" data-bucket="60">1m</button>
     <button class="reset-btn" id="resetBtn">CVD 리셋</button>
   </div>
@@ -328,7 +328,7 @@ const COINS = {
 // STATE
 // ============================================================
 let activeCoin = 'BTC';
-let bucketSeconds = 30;
+let bucketSeconds = 5;
 let sockets = {};
 let rawTrades = {};
 let cvdData = {};
