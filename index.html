@@ -428,13 +428,27 @@ const cDef = {
   }
 };
 
+let syncing = false;
+function syncCharts(sourceChart, targetChart) {
+  if (syncing) return;
+  syncing = true;
+  const srcX = sourceChart.scales.x;
+  targetChart.options.scales.x.min = srcX.min;
+  targetChart.options.scales.x.max = srcX.max;
+  targetChart.update('none');
+  syncing = false;
+}
+
 const priceChart = new Chart(document.getElementById('priceChart').getContext('2d'), {
   type:'line',
   data:{datasets:[{data:[],borderColor:'#e8e8ef',borderWidth:1.5,pointRadius:0,
     fill:{target:'origin',above:'rgba(0,230,118,0.05)',below:'rgba(255,23,68,0.05)'},tension:0.1}]},
   options:{...cDef,parsing:{xAxisKey:'t',yAxisKey:'v'},
     scales:{...cDef.scales,y:{...cDef.scales.y,
-      ticks:{...cDef.scales.y.ticks,callback:v=>v>=1000?'$'+v.toLocaleString():'$'+v.toFixed(2)}}}}
+      ticks:{...cDef.scales.y.ticks,callback:v=>v>=1000?'$'+v.toLocaleString():'$'+v.toFixed(2)}}},
+    plugins:{...cDef.plugins,
+      zoom:{pan:{enabled:true,mode:'x',onPan:({chart})=>syncCharts(chart,cvdChart)},
+        zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x',onZoom:({chart})=>syncCharts(chart,cvdChart)}}}}
 });
 
 const cvdChart = new Chart(document.getElementById('cvdChart').getContext('2d'), {
@@ -443,7 +457,8 @@ const cvdChart = new Chart(document.getElementById('cvdChart').getContext('2d'),
     scales:{...cDef.scales,y:{...cDef.scales.y,
       ticks:{...cDef.scales.y.ticks,callback:v=>fmt$(v)}}},
     plugins:{...cDef.plugins,
-      zoom:{pan:{enabled:true,mode:'x'},zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'}}}}
+      zoom:{pan:{enabled:true,mode:'x',onPan:({chart})=>syncCharts(chart,priceChart)},
+        zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x',onZoom:({chart})=>syncCharts(chart,priceChart)}}}}
 });
 
 function initDatasets() {
@@ -664,6 +679,7 @@ document.querySelectorAll('.timeframe-btn').forEach(btn=>{
 document.getElementById('resetBtn').addEventListener('click',()=>{
   Object.keys(EXCHANGES).forEach(id=>{cvdData[id]=0;rawTrades[id]=[];});
   startPrice=currentPrice; tradeCount=0;
+  priceChart.resetZoom(); cvdChart.resetZoom();
 });
 
 // ============================================================
