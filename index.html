@@ -136,14 +136,6 @@
     cursor: pointer; border-radius: 4px; margin-left: auto; transition: all 0.2s;
   }
   .reset-btn:hover { background: var(--accent-red); color: #000; }
-  .loading-overlay {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(10,10,15,0.85);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 10; border-radius: 12px;
-    font-size: 12px; color: var(--text-secondary); letter-spacing: 1px;
-  }
-  .loading-overlay.hidden { display: none; }
   .footer {
     padding: 12px 24px; text-align: center;
     font-size: 10px; color: var(--text-muted);
@@ -179,7 +171,6 @@
 <div class="dashboard">
   <div class="chart-card">
     <div class="watermark">Herdvibe.com</div>
-    <div id="priceLoading" class="loading-overlay">과거 데이터 로딩 중...</div>
     <div class="section-header">
       <span class="section-title" id="priceLabel">BTC/USDT · Binance Reference</span>
       <div class="price-display">
@@ -201,7 +192,6 @@
 
   <div class="chart-card">
     <div class="watermark">Herdvibe.com</div>
-    <div id="cvdLoading" class="loading-overlay">과거 데이터 로딩 중...</div>
     <div class="section-header">
       <span class="section-title">거래소별 CVD (Cumulative Volume Delta)</span>
     </div>
@@ -441,85 +431,14 @@ function addTrade(exId, price, qty, isBuy, ts) {
 }
 
 // ============================================================
-// REST API - HISTORICAL
-// ============================================================
-async function loadHistory() {
-  document.getElementById('priceLoading').classList.remove('hidden');
-  document.getElementById('cvdLoading').classList.remove('hidden');
-  const coin = activeCoin;
-  const jobs = [];
-
-  // BINANCE
-  jobs.push((async()=>{
-    try{
-      const r = await fetch(`https://api.binance.com/api/v3/trades?symbol=${COINS[coin].binance.rest}&limit=1000`);
-      const d = await r.json();
-      d.forEach(t=>addTrade('binance',parseFloat(t.price),parseFloat(t.qty),!t.isBuyerMaker,t.time));
-      console.log('Binance:',d.length,'trades loaded');
-    }catch(e){console.warn('Binance REST:',e);}
-  })());
-
-  // BYBIT
-  jobs.push((async()=>{
-    try{
-      const r = await fetch(`https://api.bybit.com/v5/market/recent-trade?category=spot&symbol=${COINS[coin].bybit.rest}&limit=1000`);
-      const d = await r.json();
-      if(d.result&&d.result.list){
-        const trades = d.result.list.reverse();
-        trades.forEach(t=>addTrade('bybit',parseFloat(t.price),parseFloat(t.size),t.side==='Buy',parseInt(t.time)));
-        console.log('Bybit:',trades.length,'trades loaded');
-      }
-    }catch(e){console.warn('Bybit REST:',e);}
-  })());
-
-  // KRAKEN
-  jobs.push((async()=>{
-    try{
-      const r = await fetch(`https://api.kraken.com/0/public/Trades?pair=${COINS[coin].kraken.rest}&count=1000`);
-      const d = await r.json();
-      if(d.result){
-        const key = Object.keys(d.result).find(k=>k!=='last');
-        if(key&&d.result[key]){
-          const trades = d.result[key];
-          trades.forEach(t=>{
-            addTrade('kraken',parseFloat(t[0]),parseFloat(t[1]),t[3]==='b',Math.floor(parseFloat(t[2])*1000));
-          });
-          console.log('Kraken:',trades.length,'trades loaded');
-        }
-      }
-    }catch(e){console.warn('Kraken REST:',e);}
-  })());
-
-  // COINBASE
-  jobs.push((async()=>{
-    try{
-      const r = await fetch(`https://api.exchange.coinbase.com/products/${COINS[coin].coinbase.rest}/trades?limit=1000`);
-      const d = await r.json();
-      if(Array.isArray(d)){
-        const trades = d.reverse();
-        trades.forEach(t=>{
-          addTrade('coinbase',parseFloat(t.price),parseFloat(t.size),t.side==='sell',new Date(t.time).getTime());
-        });
-        console.log('Coinbase:',trades.length,'trades loaded');
-      }
-    }catch(e){console.warn('Coinbase REST:',e);}
-  })());
-
-  await Promise.allSettled(jobs);
-  document.getElementById('priceLoading').classList.add('hidden');
-  document.getElementById('cvdLoading').classList.add('hidden');
-}
-
-// ============================================================
 // WEBSOCKETS
 // ============================================================
-async function connectAll() {
+function connectAll() {
   disconnectAll();
   connectedCount = 0;
   Object.keys(EXCHANGES).forEach(id=>{cvdData[id]=0;rawTrades[id]=[];});
   currentPrice=0; startPrice=0; tradeCount=0;
 
-  await loadHistory();
   connectBinance(); connectBybit(); connectKraken(); connectCoinbase();
 }
 
