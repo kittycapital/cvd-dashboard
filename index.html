@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multi-Exchange CVD Dashboard | Herdvibe</title>
+<title>거래소별 CVD Dashboard | Herdvibe</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@700;900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  
   :root {
     --bg-primary: #0a0a0f;
     --bg-secondary: #12121a;
@@ -21,15 +20,10 @@
     --text-muted: #55556a;
     --accent-green: #00e676;
     --accent-red: #ff1744;
-    --accent-yellow: #ffd740;
     --accent-blue: #448aff;
     --accent-purple: #b388ff;
-    --accent-cyan: #18ffff;
     --accent-orange: #ff9100;
-    --accent-pink: #ff4081;
-    --accent-white: #ffffff;
   }
-
   body {
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -37,302 +31,124 @@
     min-height: 100vh;
     overflow-x: hidden;
   }
-
   .header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex; flex-direction: column; align-items: center;
     padding: 20px 24px 16px;
     border-bottom: 1px solid var(--border);
-    background: var(--bg-secondary);
-    gap: 12px;
+    background: var(--bg-secondary); gap: 12px;
   }
-
   .header-title {
     font-family: 'Noto Sans KR', sans-serif;
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    color: var(--text-primary);
+    font-size: 22px; font-weight: 900;
+    letter-spacing: 2px; color: var(--text-primary);
   }
-
   .coin-tabs {
-    display: flex;
-    gap: 4px;
-    background: var(--bg-primary);
-    padding: 3px;
-    border-radius: 8px;
+    display: flex; gap: 4px;
+    background: var(--bg-primary); padding: 3px; border-radius: 8px;
   }
-
   .coin-tab {
-    padding: 8px 20px;
-    border: none;
-    background: transparent;
-    color: var(--text-secondary);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: all 0.2s;
-    letter-spacing: 1px;
+    padding: 8px 20px; border: none; background: transparent;
+    color: var(--text-secondary); font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border-radius: 6px; transition: all 0.2s; letter-spacing: 1px;
   }
-
-  .coin-tab:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
-  }
-
-  .coin-tab.active {
-    background: var(--accent-green);
-    color: #000;
-    font-weight: 700;
-  }
-
-  .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
+  .coin-tab:hover { color: var(--text-primary); background: var(--bg-hover); }
+  .coin-tab.active { background: var(--accent-green); color: #000; font-weight: 700; }
+  .status-bar { display: flex; align-items: center; gap: 12px; }
   .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent-red);
-    transition: background 0.3s;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-red); transition: background 0.3s;
   }
-
   .status-dot.connected {
     background: var(--accent-green);
     box-shadow: 0 0 8px var(--accent-green);
     animation: pulse 2s infinite;
   }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .status-text { font-size: 11px; color: var(--text-muted); }
+  .dashboard { padding: 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .chart-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
   }
-
-  .status-text {
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-
-  .dashboard {
-    padding: 16px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .price-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    position: relative;
-  }
-
   .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
   }
-
   .section-title {
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    font-size: 11px; color: var(--text-muted);
+    letter-spacing: 2px; text-transform: uppercase;
   }
-
-  .price-display {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-  }
-
-  .current-price {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .price-change {
-    font-size: 13px;
-    font-weight: 500;
-  }
-
+  .price-display { display: flex; align-items: baseline; gap: 12px; }
+  .current-price { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+  .price-change { font-size: 13px; font-weight: 500; }
   .price-change.up { color: var(--accent-green); }
   .price-change.down { color: var(--accent-red); }
-
-  .chart-container {
-    position: relative;
-    height: 200px;
-  }
-
-  .cvd-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-  }
-
-  .cvd-chart-container {
-    position: relative;
-    height: 280px;
-  }
-
-  .exchange-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    background: var(--bg-primary);
-    border-radius: 6px;
-    font-size: 11px;
-    border: 1px solid var(--border);
-    transition: opacity 0.2s;
-    cursor: pointer;
-  }
-
-  .legend-item:hover {
-    border-color: var(--text-muted);
-  }
-
-  .legend-item.hidden {
-    opacity: 0.3;
-  }
-
-  .legend-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 3px;
-  }
-
-  .legend-name {
-    color: var(--text-secondary);
-  }
-
-  .legend-value {
-    font-weight: 600;
-    min-width: 80px;
-    text-align: right;
-  }
-
-  .legend-value.positive { color: var(--accent-green); }
-  .legend-value.negative { color: var(--accent-red); }
-
-  .info-row {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
-
-  .info-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    flex: 1;
-    min-width: 180px;
-  }
-
-  .info-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .info-value {
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .info-value.positive { color: var(--accent-green); }
-  .info-value.negative { color: var(--accent-red); }
-
-  .controls-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .timeframe-btn {
-    padding: 5px 12px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-secondary);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.2s;
-  }
-
-  .timeframe-btn:hover {
-    border-color: var(--text-muted);
-    color: var(--text-primary);
-  }
-
-  .timeframe-btn.active {
-    background: var(--accent-blue);
-    color: #fff;
-    border-color: var(--accent-blue);
-  }
-
-  .reset-btn {
-    padding: 5px 12px;
-    border: 1px solid var(--accent-red);
-    background: transparent;
-    color: var(--accent-red);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    cursor: pointer;
-    border-radius: 4px;
-    margin-left: auto;
-    transition: all 0.2s;
-  }
-
-  .reset-btn:hover {
-    background: var(--accent-red);
-    color: #000;
-  }
-
+  .chart-container { position: relative; height: 200px; }
+  .cvd-chart-container { position: relative; height: 280px; }
   .watermark {
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    position: absolute; top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     font-family: 'JetBrains Mono', monospace;
-    font-size: 40px;
-    font-weight: 700;
+    font-size: 40px; font-weight: 700;
     color: rgba(255,255,255,0.03);
-    pointer-events: none;
-    letter-spacing: 4px;
-    white-space: nowrap;
+    pointer-events: none; letter-spacing: 4px;
+    white-space: nowrap; z-index: 1;
   }
-
+  .exchange-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 10px; background: var(--bg-primary);
+    border-radius: 6px; font-size: 11px;
+    border: 1px solid var(--border); transition: opacity 0.2s; cursor: pointer;
+  }
+  .legend-item:hover { border-color: var(--text-muted); }
+  .legend-item.hidden { opacity: 0.3; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+  .legend-name { color: var(--text-secondary); }
+  .legend-value { font-weight: 600; min-width: 80px; text-align: right; }
+  .legend-value.positive { color: var(--accent-green); }
+  .legend-value.negative { color: var(--accent-red); }
+  .info-row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .info-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; flex: 1; min-width: 180px;
+  }
+  .info-label {
+    font-size: 10px; color: var(--text-muted);
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .info-value { font-size: 18px; font-weight: 600; }
+  .info-value.positive { color: var(--accent-green); }
+  .info-value.negative { color: var(--accent-red); }
+  .controls-row { display: flex; align-items: center; gap: 8px; }
+  .timeframe-btn {
+    padding: 5px 12px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    cursor: pointer; border-radius: 4px; transition: all 0.2s;
+  }
+  .timeframe-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+  .timeframe-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+  .reset-btn {
+    padding: 5px 12px; border: 1px solid var(--accent-red);
+    background: transparent; color: var(--accent-red);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    cursor: pointer; border-radius: 4px; margin-left: auto; transition: all 0.2s;
+  }
+  .reset-btn:hover { background: var(--accent-red); color: #000; }
+  .loading-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,10,15,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 10; border-radius: 12px;
+    font-size: 12px; color: var(--text-secondary); letter-spacing: 1px;
+  }
+  .loading-overlay.hidden { display: none; }
   .footer {
-    padding: 12px 24px;
-    text-align: center;
-    font-size: 10px;
-    color: var(--text-muted);
-    border-top: 1px solid var(--border);
-    letter-spacing: 1px;
+    padding: 12px 24px; text-align: center;
+    font-size: 10px; color: var(--text-muted);
+    border-top: 1px solid var(--border); letter-spacing: 1px;
   }
-
   @media (max-width: 768px) {
     .header { flex-direction: column; gap: 12px; padding: 12px 16px; }
     .dashboard { padding: 12px 16px; }
@@ -341,6 +157,7 @@
     .cvd-chart-container { height: 220px; }
     .info-row { gap: 8px; }
     .info-card { min-width: 140px; padding: 12px; }
+    .watermark { font-size: 28px; }
   }
 </style>
 </head>
@@ -360,9 +177,9 @@
 </div>
 
 <div class="dashboard">
-  <!-- Price Chart -->
-  <div class="price-section">
+  <div class="chart-card">
     <div class="watermark">Herdvibe.com</div>
+    <div id="priceLoading" class="loading-overlay">과거 데이터 로딩 중...</div>
     <div class="section-header">
       <span class="section-title" id="priceLabel">BTC/USDT · Binance Reference</span>
       <div class="price-display">
@@ -370,34 +187,28 @@
         <span class="price-change" id="priceChange">--</span>
       </div>
     </div>
-    <div class="chart-container">
-      <canvas id="priceChart"></canvas>
-    </div>
+    <div class="chart-container"><canvas id="priceChart"></canvas></div>
   </div>
 
-  <!-- Controls -->
   <div class="controls-row">
     <span style="font-size:10px;color:var(--text-muted);letter-spacing:1px;">집계 간격:</span>
-    <button class="timeframe-btn active" data-bucket="5">5s</button>
+    <button class="timeframe-btn" data-bucket="5">5s</button>
     <button class="timeframe-btn" data-bucket="15">15s</button>
-    <button class="timeframe-btn" data-bucket="30">30s</button>
+    <button class="timeframe-btn active" data-bucket="30">30s</button>
     <button class="timeframe-btn" data-bucket="60">1m</button>
     <button class="reset-btn" id="resetBtn">CVD 리셋</button>
   </div>
 
-  <!-- CVD Chart -->
-  <div class="cvd-section">
+  <div class="chart-card">
     <div class="watermark">Herdvibe.com</div>
+    <div id="cvdLoading" class="loading-overlay">과거 데이터 로딩 중...</div>
     <div class="section-header">
       <span class="section-title">거래소별 CVD (Cumulative Volume Delta)</span>
     </div>
-    <div class="cvd-chart-container">
-      <canvas id="cvdChart"></canvas>
-    </div>
+    <div class="cvd-chart-container"><canvas id="cvdChart"></canvas></div>
     <div class="exchange-legend" id="exchangeLegend"></div>
   </div>
 
-  <!-- Info Cards -->
   <div class="info-row">
     <div class="info-card">
       <div class="info-label">합산 CVD</div>
@@ -418,43 +229,37 @@
   </div>
 </div>
 
-<div class="footer">
-  HERDVIBE.COM · Real-time CVD from Exchange WebSocket APIs
-</div>
+<div class="footer">HERDVIBE.COM · Real-time CVD from Exchange WebSocket APIs</div>
 
 <script>
 // ============================================================
 // CONFIG
 // ============================================================
 const EXCHANGES = {
-  binance:  { name: 'Binance',  color: '#F0B90B', pairType: 'usdt' },
-  bybit:    { name: 'Bybit',    color: '#ff9100', pairType: 'usdt' },
-  okx:      { name: 'OKX',      color: '#00e676', pairType: 'usdt' },
-  kraken:   { name: 'Kraken',   color: '#b388ff', pairType: 'usd'  },
-  coinbase: { name: 'Coinbase', color: '#448aff', pairType: 'usd'  },
+  binance:  { name: 'Binance',  color: '#F0B90B' },
+  bybit:    { name: 'Bybit',    color: '#ff9100' },
+  kraken:   { name: 'Kraken',   color: '#b388ff' },
+  coinbase: { name: 'Coinbase', color: '#448aff' },
 };
 
 const COINS = {
   BTC: {
-    binance:  { ws: 'btcusdt@trade',        rest: 'BTCUSDT' },
-    bybit:    { ws: 'publicTrade.BTCUSDT',   rest: 'BTCUSDT' },
-    okx:      { ws: 'BTC-USDT',              rest: 'BTC-USDT' },
-    kraken:   { ws: 'BTC/USD',               rest: 'XBT/USD' },
-    coinbase: { ws: 'BTC-USD',               rest: 'BTC-USD' },
+    binance:  { ws: 'btcusdt@trade',      rest: 'BTCUSDT' },
+    bybit:    { ws: 'publicTrade.BTCUSDT', rest: 'BTCUSDT' },
+    kraken:   { ws: 'BTC/USD',             rest: 'XBTUSD' },
+    coinbase: { ws: 'BTC-USD',             rest: 'BTC-USD' },
   },
   ETH: {
-    binance:  { ws: 'ethusdt@trade',         rest: 'ETHUSDT' },
-    bybit:    { ws: 'publicTrade.ETHUSDT',   rest: 'ETHUSDT' },
-    okx:      { ws: 'ETH-USDT',              rest: 'ETH-USDT' },
-    kraken:   { ws: 'ETH/USD',               rest: 'ETH/USD' },
-    coinbase: { ws: 'ETH-USD',               rest: 'ETH-USD' },
+    binance:  { ws: 'ethusdt@trade',       rest: 'ETHUSDT' },
+    bybit:    { ws: 'publicTrade.ETHUSDT', rest: 'ETHUSDT' },
+    kraken:   { ws: 'ETH/USD',             rest: 'ETHUSD' },
+    coinbase: { ws: 'ETH-USD',             rest: 'ETH-USD' },
   },
   SOL: {
-    binance:  { ws: 'solusdt@trade',         rest: 'SOLUSDT' },
-    bybit:    { ws: 'publicTrade.SOLUSDT',   rest: 'SOLUSDT' },
-    okx:      { ws: 'SOL-USDT',              rest: 'SOL-USDT' },
-    kraken:   { ws: 'SOL/USD',               rest: 'SOL/USD' },
-    coinbase: { ws: 'SOL-USD',               rest: 'SOL-USD' },
+    binance:  { ws: 'solusdt@trade',       rest: 'SOLUSDT' },
+    bybit:    { ws: 'publicTrade.SOLUSDT', rest: 'SOLUSDT' },
+    kraken:   { ws: 'SOL/USD',             rest: 'SOLUSD' },
+    coinbase: { ws: 'SOL-USD',             rest: 'SOL-USD' },
   },
 };
 
@@ -462,494 +267,413 @@ const COINS = {
 // STATE
 // ============================================================
 let activeCoin = 'BTC';
-let bucketSeconds = 5;
+let bucketSeconds = 30;
 let sockets = {};
-let cvdData = {};       // { exchangeId: cumulative_value }
-let cvdHistory = {};    // { exchangeId: [{t, v}] }
-let priceHistory = [];  // [{t, v}]
+let rawTrades = {};
+let cvdData = {};
+let hiddenExchanges = new Set();
+let connectedCount = 0;
 let currentPrice = 0;
 let startPrice = 0;
 let tradeCount = 0;
-let hiddenExchanges = new Set();
-let connectedCount = 0;
 
-const MAX_POINTS = 500;
+const MAX_RAW = 50000;
+const MAX_PTS = 600;
+
+// ============================================================
+// HELPERS
+// ============================================================
+function fmt$(v) {
+  const a = Math.abs(v), s = v < 0 ? '-' : '';
+  if (a >= 1e9) return s+'$'+(a/1e9).toFixed(2)+'B';
+  if (a >= 1e6) return s+'$'+(a/1e6).toFixed(2)+'M';
+  if (a >= 1e3) return s+'$'+(a/1e3).toFixed(1)+'K';
+  return '$'+v.toFixed(0);
+}
+
+function bucket(ts) {
+  return Math.floor(ts / (bucketSeconds * 1000)) * (bucketSeconds * 1000);
+}
+
+function rebuildHistory() {
+  const keys = Object.keys(EXCHANGES);
+  const cvdH = {}, priceH = [];
+
+  keys.forEach(id => {
+    cvdH[id] = [];
+    const trades = rawTrades[id] || [];
+    let cum = 0, lastB = -1;
+    for (const t of trades) {
+      cum += t.isBuy ? (t.p * t.q) : -(t.p * t.q);
+      const b = bucket(t.t);
+      if (b === lastB && cvdH[id].length > 0) {
+        cvdH[id][cvdH[id].length-1].v = cum;
+      } else {
+        cvdH[id].push({ t: b, v: cum });
+        lastB = b;
+      }
+    }
+    cvdData[id] = cum;
+    if (cvdH[id].length > MAX_PTS) cvdH[id] = cvdH[id].slice(-MAX_PTS);
+  });
+
+  const bt = rawTrades.binance || [];
+  let lastPB = -1;
+  for (const t of bt) {
+    const b = bucket(t.t);
+    if (b === lastPB && priceH.length > 0) {
+      priceH[priceH.length-1].v = t.p;
+    } else {
+      priceH.push({ t: b, v: t.p });
+      lastPB = b;
+    }
+  }
+  if (priceH.length > MAX_PTS) priceH.splice(0, priceH.length - MAX_PTS);
+  return { cvdH, priceH };
+}
 
 // ============================================================
 // CHARTS
 // ============================================================
-const chartDefaults = {
-  responsive: true,
-  maintainAspectRatio: false,
-  animation: false,
+const cDef = {
+  responsive: true, maintainAspectRatio: false, animation: false,
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: '#16161f',
-      borderColor: '#252535',
-      borderWidth: 1,
-      titleFont: { family: "'JetBrains Mono'", size: 11 },
-      bodyFont: { family: "'JetBrains Mono'", size: 11 },
-      padding: 10,
-      cornerRadius: 6,
+      backgroundColor:'#16161f', borderColor:'#252535', borderWidth:1,
+      titleFont:{family:"'JetBrains Mono'",size:11},
+      bodyFont:{family:"'JetBrains Mono'",size:11},
+      padding:10, cornerRadius:6,
     },
   },
   scales: {
     x: {
-      type: 'linear',
-      display: true,
-      grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-      ticks: {
-        font: { family: "'JetBrains Mono'", size: 10 },
-        color: '#55556a',
-        maxTicksLimit: 8,
+      type:'linear', display:true,
+      grid:{color:'rgba(255,255,255,0.04)',drawBorder:false},
+      ticks:{
+        font:{family:"'JetBrains Mono'",size:10}, color:'#55556a', maxTicksLimit:8,
         callback: v => {
-          const d = new Date(v);
-          return d.getHours().toString().padStart(2,'0') + ':' + 
-                 d.getMinutes().toString().padStart(2,'0') + ':' +
+          const d=new Date(v);
+          return d.getHours().toString().padStart(2,'0')+':'+
+                 d.getMinutes().toString().padStart(2,'0')+':'+
                  d.getSeconds().toString().padStart(2,'0');
         }
       },
     },
     y: {
-      grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
-      ticks: {
-        font: { family: "'JetBrains Mono'", size: 10 },
-        color: '#55556a',
-      },
+      grid:{color:'rgba(255,255,255,0.04)',drawBorder:false},
+      ticks:{font:{family:"'JetBrains Mono'",size:10},color:'#55556a'},
     }
   }
 };
 
-// Price chart
-const priceCtx = document.getElementById('priceChart').getContext('2d');
-const priceChart = new Chart(priceCtx, {
-  type: 'line',
-  data: {
-    datasets: [{
-      data: [],
-      borderColor: '#e8e8ef',
-      borderWidth: 1.5,
-      pointRadius: 0,
-      fill: {
-        target: 'origin',
-        above: 'rgba(0,230,118,0.05)',
-        below: 'rgba(255,23,68,0.05)',
-      },
-      tension: 0.1,
-    }]
-  },
-  options: {
-    ...chartDefaults,
-    parsing: { xAxisKey: 't', yAxisKey: 'v' },
-    scales: {
-      ...chartDefaults.scales,
-      y: {
-        ...chartDefaults.scales.y,
-        ticks: {
-          ...chartDefaults.scales.y.ticks,
-          callback: v => v >= 1000 ? '$' + v.toLocaleString() : '$' + v.toFixed(2),
-        }
-      }
-    }
-  }
+const priceChart = new Chart(document.getElementById('priceChart').getContext('2d'), {
+  type:'line',
+  data:{datasets:[{data:[],borderColor:'#e8e8ef',borderWidth:1.5,pointRadius:0,
+    fill:{target:'origin',above:'rgba(0,230,118,0.05)',below:'rgba(255,23,68,0.05)'},tension:0.1}]},
+  options:{...cDef,parsing:{xAxisKey:'t',yAxisKey:'v'},
+    scales:{...cDef.scales,y:{...cDef.scales.y,
+      ticks:{...cDef.scales.y.ticks,callback:v=>v>=1000?'$'+v.toLocaleString():'$'+v.toFixed(2)}}}}
 });
 
-// CVD chart
-const cvdCtx = document.getElementById('cvdChart').getContext('2d');
-const cvdChart = new Chart(cvdCtx, {
-  type: 'line',
-  data: { datasets: [] },
-  options: {
-    ...chartDefaults,
-    parsing: { xAxisKey: 't', yAxisKey: 'v' },
-    scales: {
-      ...chartDefaults.scales,
-      y: {
-        ...chartDefaults.scales.y,
-        ticks: {
-          ...chartDefaults.scales.y.ticks,
-          callback: v => formatDollar(v),
-        }
-      }
-    },
-    plugins: {
-      ...chartDefaults.plugins,
-      zoom: {
-        pan: { enabled: true, mode: 'x' },
-        zoom: {
-          wheel: { enabled: true },
-          pinch: { enabled: true },
-          mode: 'x',
-        }
-      }
-    }
-  }
+const cvdChart = new Chart(document.getElementById('cvdChart').getContext('2d'), {
+  type:'line', data:{datasets:[]},
+  options:{...cDef,parsing:{xAxisKey:'t',yAxisKey:'v'},
+    scales:{...cDef.scales,y:{...cDef.scales.y,
+      ticks:{...cDef.scales.y.ticks,callback:v=>fmt$(v)}}},
+    plugins:{...cDef.plugins,
+      zoom:{pan:{enabled:true,mode:'x'},zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x'}}}}
 });
 
-// Initialize CVD datasets
-function initCvdDatasets() {
-  const datasets = Object.entries(EXCHANGES).map(([id, ex]) => ({
-    label: ex.name,
-    data: [],
-    borderColor: ex.color,
-    borderWidth: 1.5,
-    pointRadius: 0,
-    tension: 0.2,
-    hidden: hiddenExchanges.has(id),
+function initDatasets() {
+  cvdChart.data.datasets = Object.entries(EXCHANGES).map(([id,ex])=>({
+    label:ex.name,data:[],borderColor:ex.color,
+    borderWidth:1.5,pointRadius:0,tension:0.2,hidden:hiddenExchanges.has(id),
   }));
-  cvdChart.data.datasets = datasets;
 }
-initCvdDatasets();
+initDatasets();
 
 // ============================================================
-// HELPERS
-// ============================================================
-function formatDollar(v) {
-  const abs = Math.abs(v);
-  if (abs >= 1e9) return (v < 0 ? '-' : '') + '$' + (abs/1e9).toFixed(2) + 'B';
-  if (abs >= 1e6) return (v < 0 ? '-' : '') + '$' + (abs/1e6).toFixed(2) + 'M';
-  if (abs >= 1e3) return (v < 0 ? '-' : '') + '$' + (abs/1e3).toFixed(1) + 'K';
-  return '$' + v.toFixed(0);
-}
-
-function getBucketTime(ts) {
-  return Math.floor(ts / (bucketSeconds * 1000)) * (bucketSeconds * 1000);
-}
-
-// ============================================================
-// EXCHANGE LEGEND
+// LEGEND
 // ============================================================
 function renderLegend() {
-  const container = document.getElementById('exchangeLegend');
-  container.innerHTML = '';
-  Object.entries(EXCHANGES).forEach(([id, ex]) => {
-    const val = cvdData[id] || 0;
-    const item = document.createElement('div');
-    item.className = 'legend-item' + (hiddenExchanges.has(id) ? ' hidden' : '');
-    item.innerHTML = `
-      <div class="legend-dot" style="background:${ex.color}"></div>
+  const c = document.getElementById('exchangeLegend');
+  c.innerHTML = '';
+  Object.entries(EXCHANGES).forEach(([id,ex]) => {
+    const val = cvdData[id]||0;
+    const el = document.createElement('div');
+    el.className = 'legend-item'+(hiddenExchanges.has(id)?' hidden':'');
+    el.innerHTML = `<div class="legend-dot" style="background:${ex.color}"></div>
       <span class="legend-name">${ex.name}</span>
-      <span class="legend-value ${val >= 0 ? 'positive' : 'negative'}">${formatDollar(val)}</span>
-    `;
-    item.addEventListener('click', () => {
-      if (hiddenExchanges.has(id)) {
-        hiddenExchanges.delete(id);
-      } else {
-        hiddenExchanges.add(id);
-      }
+      <span class="legend-value ${val>=0?'positive':'negative'}">${fmt$(val)}</span>`;
+    el.addEventListener('click', () => {
+      hiddenExchanges.has(id)?hiddenExchanges.delete(id):hiddenExchanges.add(id);
       renderLegend();
       const idx = Object.keys(EXCHANGES).indexOf(id);
-      if (cvdChart.data.datasets[idx]) {
+      if(cvdChart.data.datasets[idx]){
         cvdChart.data.datasets[idx].hidden = hiddenExchanges.has(id);
         cvdChart.update('none');
       }
     });
-    container.appendChild(item);
+    c.appendChild(el);
   });
 }
 renderLegend();
 
 // ============================================================
-// DATA PROCESSING
+// PROCESS TRADE
 // ============================================================
-function processTrade(exchangeId, price, qty, isBuy) {
-  const now = Date.now();
-  const dollarVol = price * qty;
-  const delta = isBuy ? dollarVol : -dollarVol;
+function addTrade(exId, price, qty, isBuy, ts) {
+  if(!rawTrades[exId]) rawTrades[exId]=[];
+  rawTrades[exId].push({t:ts||Date.now(), p:price, q:qty, isBuy});
+  if(rawTrades[exId].length > MAX_RAW)
+    rawTrades[exId] = rawTrades[exId].slice(-MAX_RAW*0.8|0);
 
-  // Update CVD
-  if (!cvdData[exchangeId]) cvdData[exchangeId] = 0;
-  cvdData[exchangeId] += delta;
+  const delta = isBuy ? price*qty : -(price*qty);
+  if(!cvdData[exId]) cvdData[exId]=0;
+  cvdData[exId] += delta;
 
-  // CVD history (bucketed)
-  if (!cvdHistory[exchangeId]) cvdHistory[exchangeId] = [];
-  const bt = getBucketTime(now);
-  const hist = cvdHistory[exchangeId];
-  if (hist.length > 0 && hist[hist.length - 1].t === bt) {
-    hist[hist.length - 1].v = cvdData[exchangeId];
-  } else {
-    hist.push({ t: bt, v: cvdData[exchangeId] });
-    if (hist.length > MAX_POINTS) hist.shift();
-  }
-
-  // Price (from Binance only for reference)
-  if (exchangeId === 'binance') {
+  if(exId==='binance'){
     currentPrice = price;
-    if (!startPrice) startPrice = price;
-    const bt2 = getBucketTime(now);
-    if (priceHistory.length > 0 && priceHistory[priceHistory.length - 1].t === bt2) {
-      priceHistory[priceHistory.length - 1].v = price;
-    } else {
-      priceHistory.push({ t: bt2, v: price });
-      if (priceHistory.length > MAX_POINTS) priceHistory.shift();
-    }
+    if(!startPrice) startPrice = price;
   }
-
   tradeCount++;
 }
 
 // ============================================================
-// WEBSOCKET CONNECTIONS
+// REST API - HISTORICAL
 // ============================================================
-function connectAll() {
+async function loadHistory() {
+  document.getElementById('priceLoading').classList.remove('hidden');
+  document.getElementById('cvdLoading').classList.remove('hidden');
+  const coin = activeCoin;
+  const jobs = [];
+
+  // BINANCE
+  jobs.push((async()=>{
+    try{
+      const r = await fetch(`https://api.binance.com/api/v3/trades?symbol=${COINS[coin].binance.rest}&limit=1000`);
+      const d = await r.json();
+      d.forEach(t=>addTrade('binance',parseFloat(t.price),parseFloat(t.qty),!t.isBuyerMaker,t.time));
+      console.log('Binance:',d.length,'trades loaded');
+    }catch(e){console.warn('Binance REST:',e);}
+  })());
+
+  // BYBIT
+  jobs.push((async()=>{
+    try{
+      const r = await fetch(`https://api.bybit.com/v5/market/recent-trade?category=spot&symbol=${COINS[coin].bybit.rest}&limit=1000`);
+      const d = await r.json();
+      if(d.result&&d.result.list){
+        const trades = d.result.list.reverse();
+        trades.forEach(t=>addTrade('bybit',parseFloat(t.price),parseFloat(t.size),t.side==='Buy',parseInt(t.time)));
+        console.log('Bybit:',trades.length,'trades loaded');
+      }
+    }catch(e){console.warn('Bybit REST:',e);}
+  })());
+
+  // KRAKEN
+  jobs.push((async()=>{
+    try{
+      const r = await fetch(`https://api.kraken.com/0/public/Trades?pair=${COINS[coin].kraken.rest}&count=1000`);
+      const d = await r.json();
+      if(d.result){
+        const key = Object.keys(d.result).find(k=>k!=='last');
+        if(key&&d.result[key]){
+          const trades = d.result[key];
+          trades.forEach(t=>{
+            addTrade('kraken',parseFloat(t[0]),parseFloat(t[1]),t[3]==='b',Math.floor(parseFloat(t[2])*1000));
+          });
+          console.log('Kraken:',trades.length,'trades loaded');
+        }
+      }
+    }catch(e){console.warn('Kraken REST:',e);}
+  })());
+
+  // COINBASE
+  jobs.push((async()=>{
+    try{
+      const r = await fetch(`https://api.exchange.coinbase.com/products/${COINS[coin].coinbase.rest}/trades?limit=1000`);
+      const d = await r.json();
+      if(Array.isArray(d)){
+        const trades = d.reverse();
+        trades.forEach(t=>{
+          addTrade('coinbase',parseFloat(t.price),parseFloat(t.size),t.side==='sell',new Date(t.time).getTime());
+        });
+        console.log('Coinbase:',trades.length,'trades loaded');
+      }
+    }catch(e){console.warn('Coinbase REST:',e);}
+  })());
+
+  await Promise.allSettled(jobs);
+  document.getElementById('priceLoading').classList.add('hidden');
+  document.getElementById('cvdLoading').classList.add('hidden');
+}
+
+// ============================================================
+// WEBSOCKETS
+// ============================================================
+async function connectAll() {
   disconnectAll();
   connectedCount = 0;
-  Object.keys(EXCHANGES).forEach(id => {
-    cvdData[id] = 0;
-    cvdHistory[id] = [];
-  });
-  priceHistory = [];
-  currentPrice = 0;
-  startPrice = 0;
-  tradeCount = 0;
+  Object.keys(EXCHANGES).forEach(id=>{cvdData[id]=0;rawTrades[id]=[];});
+  currentPrice=0; startPrice=0; tradeCount=0;
 
-  connectBinance();
-  connectBybit();
-  connectOkx();
-  connectKraken();
-  connectCoinbase();
+  await loadHistory();
+  connectBinance(); connectBybit(); connectKraken(); connectCoinbase();
 }
 
 function disconnectAll() {
-  Object.values(sockets).forEach(ws => {
-    try { ws.close(); } catch(e) {}
-  });
-  sockets = {};
+  Object.values(sockets).forEach(ws=>{try{ws.close();}catch(e){}});
+  sockets={};
 }
 
 function updateStatus() {
-  const dot = document.getElementById('statusDot');
-  const text = document.getElementById('statusText');
-  const total = Object.keys(EXCHANGES).length;
-  if (connectedCount >= total) {
-    dot.className = 'status-dot connected';
-    text.textContent = `${connectedCount}/${total} 거래소 연결됨`;
-  } else if (connectedCount > 0) {
-    dot.className = 'status-dot connected';
-    text.textContent = `${connectedCount}/${total} 거래소 연결됨`;
-  } else {
-    dot.className = 'status-dot';
-    text.textContent = '연결 중...';
+  const dot=document.getElementById('statusDot'), txt=document.getElementById('statusText');
+  const total=Object.keys(EXCHANGES).length;
+  if(connectedCount>0){
+    dot.className='status-dot connected';
+    txt.textContent=`${connectedCount}/${total} 거래소 연결됨`;
+  }else{
+    dot.className='status-dot'; txt.textContent='연결 중...';
   }
 }
 
-// --- BINANCE ---
-function connectBinance() {
-  const sym = COINS[activeCoin].binance.ws;
-  const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${sym}`);
-  sockets.binance = ws;
-  ws.onopen = () => { connectedCount++; updateStatus(); };
-  ws.onclose = () => { connectedCount = Math.max(0, connectedCount - 1); updateStatus(); };
-  ws.onmessage = (e) => {
-    const d = JSON.parse(e.data);
-    if (d.e === 'trade') {
-      const price = parseFloat(d.p);
-      const qty = parseFloat(d.q);
-      // m=true → buyer is maker → taker is SELLER → sell
-      const isBuy = !d.m;
-      processTrade('binance', price, qty, isBuy);
-    }
+function connectBinance(){
+  const ws=new WebSocket(`wss://stream.binance.com:9443/ws/${COINS[activeCoin].binance.ws}`);
+  sockets.binance=ws;
+  ws.onopen=()=>{connectedCount++;updateStatus();};
+  ws.onclose=()=>{connectedCount=Math.max(0,connectedCount-1);updateStatus();};
+  ws.onmessage=(e)=>{
+    const d=JSON.parse(e.data);
+    if(d.e==='trade') addTrade('binance',parseFloat(d.p),parseFloat(d.q),!d.m,d.T);
   };
-  ws.onerror = () => {};
+  ws.onerror=()=>{};
 }
 
-// --- BYBIT ---
-function connectBybit() {
-  const sym = COINS[activeCoin].bybit.ws;
-  const ws = new WebSocket('wss://stream.bybit.com/v5/public/spot');
-  sockets.bybit = ws;
-  ws.onopen = () => {
-    connectedCount++;
-    updateStatus();
-    ws.send(JSON.stringify({ op: 'subscribe', args: [sym] }));
+function connectBybit(){
+  const ws=new WebSocket('wss://stream.bybit.com/v5/public/spot');
+  sockets.bybit=ws;
+  ws.onopen=()=>{
+    connectedCount++;updateStatus();
+    ws.send(JSON.stringify({op:'subscribe',args:[COINS[activeCoin].bybit.ws]}));
   };
-  ws.onclose = () => { connectedCount = Math.max(0, connectedCount - 1); updateStatus(); };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.topic && msg.topic.startsWith('publicTrade') && msg.data) {
-      msg.data.forEach(t => {
-        const price = parseFloat(t.p);
-        const qty = parseFloat(t.v);
-        const isBuy = t.S === 'Buy';
-        processTrade('bybit', price, qty, isBuy);
+  ws.onclose=()=>{connectedCount=Math.max(0,connectedCount-1);updateStatus();};
+  ws.onmessage=(e)=>{
+    const m=JSON.parse(e.data);
+    if(m.topic&&m.topic.startsWith('publicTrade')&&m.data){
+      m.data.forEach(t=>addTrade('bybit',parseFloat(t.p),parseFloat(t.v),t.S==='Buy',parseInt(t.T)));
+    }
+  };
+  ws.onerror=()=>{};
+}
+
+function connectKraken(){
+  const ws=new WebSocket('wss://ws.kraken.com/v2');
+  sockets.kraken=ws;
+  ws.onopen=()=>{
+    connectedCount++;updateStatus();
+    ws.send(JSON.stringify({method:'subscribe',params:{channel:'trade',symbol:[COINS[activeCoin].kraken.ws]}}));
+  };
+  ws.onclose=()=>{connectedCount=Math.max(0,connectedCount-1);updateStatus();};
+  ws.onmessage=(e)=>{
+    const m=JSON.parse(e.data);
+    if(m.channel==='trade'&&m.data){
+      m.data.forEach(t=>{
+        addTrade('kraken',parseFloat(t.price),parseFloat(t.qty),t.side==='buy',new Date(t.timestamp).getTime());
       });
     }
   };
-  ws.onerror = () => {};
+  ws.onerror=()=>{};
 }
 
-// --- OKX ---
-function connectOkx() {
-  const sym = COINS[activeCoin].okx.ws;
-  const ws = new WebSocket('wss://ws.okx.com:8443/ws/v5/public');
-  sockets.okx = ws;
-  ws.onopen = () => {
-    connectedCount++;
-    updateStatus();
-    ws.send(JSON.stringify({
-      op: 'subscribe',
-      args: [{ channel: 'trades', instId: sym }]
-    }));
+function connectCoinbase(){
+  const ws=new WebSocket('wss://ws-feed.exchange.coinbase.com');
+  sockets.coinbase=ws;
+  ws.onopen=()=>{
+    connectedCount++;updateStatus();
+    ws.send(JSON.stringify({type:'subscribe',product_ids:[COINS[activeCoin].coinbase.ws],channels:['matches']}));
   };
-  ws.onclose = () => { connectedCount = Math.max(0, connectedCount - 1); updateStatus(); };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.data && msg.arg && msg.arg.channel === 'trades') {
-      msg.data.forEach(t => {
-        const price = parseFloat(t.px);
-        const qty = parseFloat(t.sz);
-        const isBuy = t.side === 'buy';
-        processTrade('okx', price, qty, isBuy);
-      });
+  ws.onclose=()=>{connectedCount=Math.max(0,connectedCount-1);updateStatus();};
+  ws.onmessage=(e)=>{
+    const m=JSON.parse(e.data);
+    if(m.type==='match'||m.type==='last_match'){
+      addTrade('coinbase',parseFloat(m.price),parseFloat(m.size),m.side==='sell',new Date(m.time).getTime());
     }
   };
-  ws.onerror = () => {};
-}
-
-// --- KRAKEN ---
-function connectKraken() {
-  const sym = COINS[activeCoin].kraken.ws;
-  const ws = new WebSocket('wss://ws.kraken.com/v2');
-  sockets.kraken = ws;
-  ws.onopen = () => {
-    connectedCount++;
-    updateStatus();
-    ws.send(JSON.stringify({
-      method: 'subscribe',
-      params: { channel: 'trade', symbol: [sym] }
-    }));
-  };
-  ws.onclose = () => { connectedCount = Math.max(0, connectedCount - 1); updateStatus(); };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.channel === 'trade' && msg.data) {
-      msg.data.forEach(t => {
-        const price = parseFloat(t.price);
-        const qty = parseFloat(t.qty);
-        const isBuy = t.side === 'buy';
-        processTrade('kraken', price, qty, isBuy);
-      });
-    }
-  };
-  ws.onerror = () => {};
-}
-
-// --- COINBASE ---
-function connectCoinbase() {
-  const sym = COINS[activeCoin].coinbase.ws;
-  const ws = new WebSocket('wss://ws-feed.exchange.coinbase.com');
-  sockets.coinbase = ws;
-  ws.onopen = () => {
-    connectedCount++;
-    updateStatus();
-    ws.send(JSON.stringify({
-      type: 'subscribe',
-      product_ids: [sym],
-      channels: ['matches']
-    }));
-  };
-  ws.onclose = () => { connectedCount = Math.max(0, connectedCount - 1); updateStatus(); };
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    if (msg.type === 'match' || msg.type === 'last_match') {
-      const price = parseFloat(msg.price);
-      const qty = parseFloat(msg.size);
-      // Coinbase: side = 'buy' means maker was buy-side → taker is SELLER
-      const isBuy = msg.side === 'sell';
-      processTrade('coinbase', price, qty, isBuy);
-    }
-  };
-  ws.onerror = () => {};
+  ws.onerror=()=>{};
 }
 
 // ============================================================
-// UI UPDATE LOOP
+// UI LOOP
 // ============================================================
-function updateUI() {
-  // Price
-  const priceEl = document.getElementById('currentPrice');
-  const changeEl = document.getElementById('priceChange');
-  if (currentPrice > 0) {
-    priceEl.textContent = '$' + currentPrice.toLocaleString(undefined, { 
-      minimumFractionDigits: activeCoin === 'SOL' ? 2 : 1, 
-      maximumFractionDigits: activeCoin === 'SOL' ? 2 : 1 
-    });
-    if (startPrice > 0) {
-      const pct = ((currentPrice - startPrice) / startPrice * 100).toFixed(2);
-      const diff = currentPrice - startPrice;
-      changeEl.textContent = `${diff >= 0 ? '+' : ''}$${diff.toFixed(1)} (${pct}%)`;
-      changeEl.className = 'price-change ' + (diff >= 0 ? 'up' : 'down');
+function updateUI(){
+  const{cvdH,priceH}=rebuildHistory();
+
+  const priceEl=document.getElementById('currentPrice');
+  const changeEl=document.getElementById('priceChange');
+  if(currentPrice>0){
+    priceEl.textContent='$'+currentPrice.toLocaleString(undefined,{
+      minimumFractionDigits:activeCoin==='SOL'?2:1,
+      maximumFractionDigits:activeCoin==='SOL'?2:1});
+    if(startPrice>0){
+      const pct=((currentPrice-startPrice)/startPrice*100).toFixed(2);
+      const diff=currentPrice-startPrice;
+      changeEl.textContent=`${diff>=0?'+':''}$${diff.toFixed(1)} (${pct}%)`;
+      changeEl.className='price-change '+(diff>=0?'up':'down');
     }
   }
 
-  // Price chart
-  priceChart.data.datasets[0].data = [...priceHistory];
+  priceChart.data.datasets[0].data=priceH;
   priceChart.update('none');
 
-  // CVD chart
-  const exchangeKeys = Object.keys(EXCHANGES);
-  exchangeKeys.forEach((id, i) => {
-    if (cvdChart.data.datasets[i]) {
-      cvdChart.data.datasets[i].data = cvdHistory[id] ? [...cvdHistory[id]] : [];
-    }
+  Object.keys(EXCHANGES).forEach((id,i)=>{
+    if(cvdChart.data.datasets[i]) cvdChart.data.datasets[i].data=cvdH[id]||[];
   });
   cvdChart.update('none');
 
-  // Legend
   renderLegend();
 
-  // Info cards
-  const totalCvdVal = Object.values(cvdData).reduce((a, b) => a + b, 0);
-  document.getElementById('totalCvd').textContent = formatDollar(totalCvdVal);
-  document.getElementById('totalCvd').className = 'info-value ' + (totalCvdVal >= 0 ? 'positive' : 'negative');
+  const total=Object.values(cvdData).reduce((a,b)=>a+b,0);
+  document.getElementById('totalCvd').textContent=fmt$(total);
+  document.getElementById('totalCvd').className='info-value '+(total>=0?'positive':'negative');
 
-  // Top buyer/seller
-  let topBuyer = { name: '--', val: 0 };
-  let topSeller = { name: '--', val: 0 };
-  Object.entries(cvdData).forEach(([id, val]) => {
-    if (val > topBuyer.val) topBuyer = { name: EXCHANGES[id].name, val };
-    if (val < topSeller.val) topSeller = { name: EXCHANGES[id].name, val };
+  let topB={n:'--',v:0},topS={n:'--',v:0};
+  Object.entries(cvdData).forEach(([id,val])=>{
+    if(val>topB.v) topB={n:EXCHANGES[id].name,v:val};
+    if(val<topS.v) topS={n:EXCHANGES[id].name,v:val};
   });
-  document.getElementById('topBuyer').textContent = topBuyer.name + ' ' + formatDollar(topBuyer.val);
-  document.getElementById('topSeller').textContent = topSeller.name + ' ' + formatDollar(topSeller.val);
-  document.getElementById('tradeCount').textContent = tradeCount.toLocaleString();
+  document.getElementById('topBuyer').textContent=topB.n+' '+fmt$(topB.v);
+  document.getElementById('topSeller').textContent=topS.n+' '+fmt$(topS.v);
+  document.getElementById('tradeCount').textContent=tradeCount.toLocaleString();
 }
 
-setInterval(updateUI, 1000);
+setInterval(updateUI,1000);
 
 // ============================================================
-// EVENT LISTENERS
+// EVENTS
 // ============================================================
-// Coin tabs
-document.querySelectorAll('.coin-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.coin-tab').forEach(b => b.classList.remove('active'));
+document.querySelectorAll('.coin-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.coin-tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    activeCoin = btn.dataset.coin;
-    document.getElementById('priceLabel').textContent = `${activeCoin}/USDT · Binance Reference`;
+    activeCoin=btn.dataset.coin;
+    document.getElementById('priceLabel').textContent=`${activeCoin}/USDT · Binance Reference`;
     connectAll();
   });
 });
 
-// Timeframe buttons
-document.querySelectorAll('.timeframe-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+document.querySelectorAll('.timeframe-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.timeframe-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    bucketSeconds = parseInt(btn.dataset.bucket);
+    bucketSeconds=parseInt(btn.dataset.bucket);
   });
 });
 
-// Reset button
-document.getElementById('resetBtn').addEventListener('click', () => {
-  Object.keys(EXCHANGES).forEach(id => {
-    cvdData[id] = 0;
-    cvdHistory[id] = [];
-  });
-  priceHistory = [];
-  startPrice = currentPrice;
-  tradeCount = 0;
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  Object.keys(EXCHANGES).forEach(id=>{cvdData[id]=0;rawTrades[id]=[];});
+  startPrice=currentPrice; tradeCount=0;
 });
 
 // ============================================================
@@ -957,6 +681,5 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 // ============================================================
 connectAll();
 </script>
-
 </body>
 </html>
